@@ -74,7 +74,7 @@
               q[i].answers[n] = q[i].answers[n].slice(1);
             }
 
-            quiz += '<div class="quiz-multi-row"><button class="quiz-multi-answer" data-answer="' + isAnswer + '" data-option="' + String.fromCharCode(option++) + '" onclick="EZQuiz.progress(this);">' + q[i].answers[n] + '</button></div>';
+            quiz += '<div class="quiz-multi-row"><div tabindex="0" class="quiz-multi-answer" data-answer="' + isAnswer + '" data-option="' + String.fromCharCode(option++) + '" onclick="EZQuiz.progress(this);" onkeypress="event.key == \'Enter\' && EZQuiz.progress(this);"><div class="quiz-answer-inner-text">' + q[i].answers[n] + '</div></div></div>';
             isAnswer = false;
 
             q[i].answers.splice(n, 1);
@@ -110,6 +110,10 @@
 
       // jump to the exercise title
       EZQuiz.scrollTo('#exercise-title', true);
+      
+      // autofocus answer options
+      var q = document.querySelector('.quiz-multi-answer');
+      if (q) q.focus();
     },
 
 
@@ -125,6 +129,11 @@
 
     // show the next question in a multi-choice quiz
     progress : function (answer, exclude) {
+      // prevent quiz progression if the quiz is over
+      if (EZQuiz.quizOver) {
+        return false;
+      }
+      
       if (answer == 'init') {
         document.getElementById('quiz-q' + EZQuiz.stats.solved).style.display = '';
         EZQuiz.incrementProgressBar();
@@ -151,6 +160,11 @@
         if (next) {
           next.style.display = ''; // show the next question
           last.style.display = 'none'; // hide the prior question
+          
+          // focus answer for next question
+          var q = next.querySelector('.quiz-multi-answer');
+          if (q) q.focus();
+          
           EZQuiz.incrementProgressBar();
 
         } else { // end the quiz if there's no new question
@@ -170,6 +184,8 @@
 
     // ends the quiz
     end : function () {
+      EZQuiz.quizOver = true;
+      
       // calculate the total score based on problems solved and mistakes made
       var solved = EZQuiz.stats.solved - EZQuiz.stats.exclude,
           problems = EZQuiz.stats.problems - EZQuiz.stats.exclude;
